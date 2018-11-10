@@ -9,6 +9,12 @@ var bulletSpeed = 10;
 var pImg;
 var bImg;
 var wImg;
+var eImg;
+var bgImg;
+var mainImg;
+var dieImg;
+var winImg;
+var destroyImg;
 
 // Set the fps
 var FPS = 30;
@@ -19,8 +25,21 @@ var bullets;
 // Create a variable to hold each of the sections of wall
 var wall;
 
+// Create a variable to hold each of the mexicans
+var enemies;
+
 // KEYS
 var SPACE = 32;
+
+// Store the enemy speed and whether they have switched direction
+var enemySpeed = 2;
+var switchedDirection;
+
+// Store the state
+var state;
+
+// Variable to store the score
+var score;
 
 // Setup function to link to the canvas
 function setup() {
@@ -28,19 +47,31 @@ function setup() {
     // Create the canvas and link to the document
     var canvas = createCanvas(600, 600);
     
+    // Set the canvas parent
+    canvas.parent("windowHolder");
+    
+    // Set the background colour
+    background(0);
+    
     // Create an empty list of bullets
     bullets = [];
     
     // Create an empty list to hold all of the chunks of wall
     wall = [];
     
-    // Set the canvas parent
-    canvas.parent("windowHolder");
+    // Create an empty list to hold the enemies
+    enemies = [];
     
     // Get the images
     pImg = loadImage("res/tank.png");
     bImg = loadImage("res/bullet.png");
     wImg = loadImage("res/bricks.png");
+    eImg = loadImage("res/mexican.png");
+    bgImg = loadImage("res/USASmall.png");
+    mainImg = loadImage("res/mainMenu.png");
+    dieImg = loadImage("res/dieMenu.png");
+    winImg = loadImage("res/winMenu.png");
+    destroyImg = loadImage("res/destroyMenu.png");
     
     // Set the player properties
     pImg.w = 80;
@@ -53,39 +84,108 @@ function setup() {
     bImg.h = 5;
     wImg.w = 20;
     wImg.h = 20;
+    eImg.w = 25;
+    eImg.h = 30;
+    
+    // Set the enemies having switched direction to false
+    switchedDirection = false;
     
     // Generate the walls
     generateWalls();
     
+    // Generate the enemies
+    generateEnemies();
+    
     // Set the fps
     frameRate(FPS);
+    
+    // Set the state to main menu
+    state = "main";
+    
+    // Set the score to zero
+    score = 0;
     
 }
 
 // Create the game loop
 function draw() {
     
-    // Clear the canvas
-    clear();
-    
-    // Draw the player image
-    image(pImg, pImg.x, pImg.y, pImg.w, pImg.h);
-    
-    // Update the bullets
-    updateBullets();
-    
-    // Draw the walls
-    drawWalls();
-    
-    // Check key presses
-    if (keyIsDown(RIGHT_ARROW)) {
-        // Move to the right by player movement speed
-        pImg.x += pSpeed;
+    // Check the state
+    if (state == "main") {
+        
+        // Draw the main menu image
+        image(mainImg, 0, 0, 600, 600);
+        
     }
-    if(keyIsDown(LEFT_ARROW)) {
-        pImg.x -= pSpeed;
-    }
+    else if(state == "play") {
     
+        // Clear the canvas
+        image(bgImg, 0, 0, width, height);
+        
+        // Draw the score
+        text("Score: " + score, 25, 25);
+
+        // Draw the player image
+        image(pImg, pImg.x, pImg.y, pImg.w, pImg.h);
+
+        // Update the bullets
+        updateBullets();
+
+        // Draw the walls
+        drawWalls();
+
+        // Update the enemies
+        updateEnemies();
+
+        // Check key presses
+        if (keyIsDown(RIGHT_ARROW)) {
+            
+            // Move to the right by player movement speed
+            pImg.x += pSpeed;
+        }
+        if(keyIsDown(LEFT_ARROW)) {
+            
+            // Move to the left by player movement speed
+            pImg.x -= pSpeed;
+        }
+        
+        // Check for player win or fail
+        if (wall.length == 0) {
+            state = "destroy";
+        }
+        if (enemies.length == 0) {
+            state = "win";
+        }
+        if (reachedWall()) {
+            state = "die";
+        }
+        
+    }
+    else {
+        
+        if (state == "die") {
+        
+            // Draw the main menu image
+            image(dieImg, 0, 0, 600, 600);
+
+        }
+        if (state == "win") {
+
+            // Draw the main menu image
+            image(winImg, 0, 0, 600, 600);
+
+        }
+        if (state == "destroy") {
+
+            // Draw the main menu image
+            image(destroyImg, 0, 0, 600, 600);
+
+        }
+        
+        // Show the score
+        text("You scored: " + score, 250, 200);
+        
+    }
 }
 
 // On key press
@@ -94,10 +194,53 @@ function keyPressed() {
     // Check the key
     if (keyCode == SPACE) {
         
-        // Fire a bullet
-        bullets.push({x:pImg.x + (pImg.w / 2), y:pImg.y});
+        // If playing
+        if (state == "play") {
+        
+            // Check if there are less than 3 bullets
+            if (bullets.length < 1) {
+
+                // Fire a bullet
+                bullets.push({x:pImg.x + (pImg.w / 2), y:pImg.y});
+                
+            }
+        }
+        
+        else if (state == "main") {
+            
+            state = "play";
+            
+        }
+        
+        else {
+            
+            // Play the game
+            setup();
+            
+        }
         
     }
+    
+}
+
+// Create a function to check whether an enemy has reached the wall
+function reachedWall() {
+    
+    // Look at each piece of wall and each enemy
+    for (var i = wall.length - 1; i > -1; i--) {
+        for (var j = enemies.length - 1; j > -1; j--) {
+            
+            // Check for collision
+            if (rectCollision(wall[i].x, wall[i].y, wImg.w, wImg.h, enemies[j].x, enemies[j].y, eImg.w, eImg.h)) {
+                
+                return true;
+                
+            }
+            
+        }
+    }
+    
+    return false;
     
 }
 
@@ -125,12 +268,43 @@ function updateBullets() {
             // Check for a collision between the bullet and wall
             if (rectCollision(bullets[i].x, bullets[i].y, bImg.w, bImg.h, wall[j].x, wall[j].y, wImg.w, wImg.h)) {
                 
-                console.log(j);
-                
                 // Remove the wall and the bullet
                 bullets.splice(i,1);
                 wall.splice(j,1);
                 bCollide = true;
+                score -= 2;
+                break;
+                
+            }
+            
+        }
+        
+        // Check if the bullet has been deleted and if so, skip this bullet
+        if (bCollide) {
+            continue;
+        }
+        
+        // Check if the bullet has hit any enemy
+        for (var j = enemies.length - 1; j > -1; j--) {
+            
+            // Check for a collision between the bullet and enemy
+            if (rectCollision(bullets[i].x, bullets[i].y, bImg.w, bImg.h, enemies[j].x, enemies[j].y, eImg.w, eImg.h)) {
+                
+                // Remove the wall and the bullet
+                bullets.splice(i,1);
+                enemies.splice(j,1);
+                bCollide = true;
+                score += 1;
+                
+                // Check if enemy speed needs increasing
+                if(score % 5 == 0) {
+                    if (enemySpeed > 0) {
+                        enemySpeed += 1;
+                    }
+                    else {
+                        enemySpeed -= 0.2;
+                    }
+                }
                 break;
                 
             }
@@ -144,6 +318,55 @@ function updateBullets() {
         
         // Draw the bullet
         image(bImg, bullets[i].x, bullets[i].y, bImg.w, bImg.h);
+        
+    }
+    
+}
+
+// Function to draw each enemy
+function updateEnemies() {
+    
+    // Set the left and right most bullet locations to the opposite side (left to right and right to left)
+    currentLeft = width;
+    currentRight = 0;
+    
+    // Look at each enemy
+    for (var i = enemies.length - 1; i > -1; i--) {
+        
+        // Move the enemy
+        enemies[i].x += enemySpeed;
+        
+        // Check whether they need to move down
+        if (switchedDirection) {
+            enemies[i].y += 2;
+        }
+        
+        // Draw the enemy
+        image(eImg, enemies[i].x, enemies[i].y, eImg.w, eImg.h);
+        
+        // If the x is less than the current lowest x, update it
+        if(enemies[i].x < currentLeft) {
+            currentLeft = enemies[i].x;
+        }
+
+        // If the x is more than the current highest x, update it
+        if(enemies[i].x > currentRight) {
+            currentRight = enemies[i].x;
+        }
+        
+    }
+    
+    // Reset the direction switch flag
+    switchedDirection = false;
+    
+    // Check whether the enemy direction needs to switch
+    if (currentLeft < 25 || currentRight + eImg.w > width - 25) {
+        
+        // Switch direction
+        enemySpeed = enemySpeed *= -1;
+        
+        // Set direction switched to true
+        switchedDirection = true;
         
     }
     
@@ -182,6 +405,30 @@ function generateWalls() {
                 wall.push({x:wallX + (base * (wallX + wallW)) + (i * wImg.w), y: wallY + (j * wImg.h)});
                 
             }
+        }
+    }
+}
+
+// Function to generate all of the enemies
+function generateEnemies() {
+    
+    // Set the number of enemies on the x and y
+    var ex = 1;
+    var ey = 1;
+    
+    // Set the base x and y of the enemies
+    var base = 25;
+    
+    // Set the gap between enemies
+    var gap = 10;
+    
+    // Iteratively generate the enemies
+    for (var i = 0; i < ex; i++) {
+        for (var j = 0; j < ey; j++) {
+            
+            // Add the enemy
+            enemies.push({x:base + (i * gap) + (i * eImg.w), y:base + (j * gap) + (j * eImg.h)});
+            
         }
     }
 }
