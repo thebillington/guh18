@@ -413,8 +413,8 @@ function generateWalls() {
 function generateEnemies() {
     
     // Set the number of enemies on the x and y
-    var ex = 1;
-    var ey = 1;
+    var ex = 11;
+    var ey = 5;
     
     // Set the base x and y of the enemies
     var base = 25;
