@@ -1,6 +1,14 @@
 // Created by Billy Rebecchi for Great Uni Hack 2018
 // Code to hold a space invaders remake called 'Trump Invaders'
 
+// Prevent standard key presses
+window.addEventListener("keydown", function(e) {
+    // space and arrow keys
+    if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+        e.preventDefault();
+    }
+}, false);
+
 // Physics
 var pSpeed = 5;
 var bulletSpeed = 10;
