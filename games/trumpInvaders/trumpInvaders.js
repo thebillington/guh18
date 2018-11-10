@@ -41,6 +41,9 @@ var state;
 // Variable to store the score
 var score;
 
+// Set the base url
+var baseURL = "games/trumpInvaders/";
+
 // Setup function to link to the canvas
 function setup() {
     
@@ -49,9 +52,6 @@ function setup() {
     
     // Set the canvas parent
     canvas.parent("windowHolder");
-    
-    // Set the background colour
-    background(0);
     
     // Create an empty list of bullets
     bullets = [];
@@ -63,15 +63,15 @@ function setup() {
     enemies = [];
     
     // Get the images
-    pImg = loadImage("res/tank.png");
-    bImg = loadImage("res/bullet.png");
-    wImg = loadImage("res/bricks.png");
-    eImg = loadImage("res/mexican.png");
-    bgImg = loadImage("res/USASmall.png");
-    mainImg = loadImage("res/mainMenu.png");
-    dieImg = loadImage("res/dieMenu.png");
-    winImg = loadImage("res/winMenu.png");
-    destroyImg = loadImage("res/destroyMenu.png");
+    pImg = loadImage(baseURL + "res/tank.png");
+    bImg = loadImage(baseURL + "res/bullet.png");
+    wImg = loadImage(baseURL + "res/bricks.png");
+    eImg = loadImage(baseURL + "res/mexican.png");
+    bgImg = loadImage(baseURL + "res/USASmall.png");
+    mainImg = loadImage(baseURL + "res/mainMenu.png");
+    dieImg = loadImage(baseURL + "res/dieMenu.png");
+    winImg = loadImage(baseURL + "res/winMenu.png");
+    destroyImg = loadImage(baseURL + "res/destroyMenu.png");
     
     // Set the player properties
     pImg.w = 80;
@@ -142,11 +142,26 @@ function draw() {
             
             // Move to the right by player movement speed
             pImg.x += pSpeed;
+            
+            // Keep Trump on screen
+            if (pImg.x + pImg.w > width + 10) {
+                
+                pImg.x = width + 10 - pImg.w;
+                
+            }
+            
         }
         if(keyIsDown(LEFT_ARROW)) {
             
             // Move to the left by player movement speed
             pImg.x -= pSpeed;
+            
+            // Keep Trump on screen
+            if (pImg.x < - 10) {
+                
+                pImg.x = -10;
+                
+            }
         }
         
         // Check for player win or fail
