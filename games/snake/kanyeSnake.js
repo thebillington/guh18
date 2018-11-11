@@ -35,7 +35,8 @@ var bImg;
 var kImg;
 var mImg;
 var yImg;
-var manuImg;
+var menuImg;
+var dieImg;
 
 // Variable to store the state
 var state;
@@ -48,6 +49,12 @@ var score;
 
 // Set the space key code
 var SPACE = 32;
+
+// Create a function to hold button presses for konami code
+var kCode;
+
+// Hold the frame rate
+var fps;
 
 // Function to return a coordinate
 function Coord(x, y) {
@@ -67,7 +74,7 @@ function setup() {
     canvas.parent("windowHolder");
     
     // Set the frame rate
-    frameRate(5);
+    fps = 5;
     
     // Get the images
     bImg = loadImage(baseURL + "res/background.png");
@@ -75,6 +82,7 @@ function setup() {
     mImg = loadImage(baseURL + "res/pickup.png");
     yImg = loadImage(baseURL + "res/body.png");
     menuImg = loadImage(baseURL + "res/main.png");
+    dieImg = loadImage(baseURL + "res/die.png");
     
     // Calculate pixel size
     pixelSize = width / gridSize;
@@ -97,6 +105,12 @@ function setup() {
     // Set the initial score
     score = 0;
     
+    // Set the text size
+    textSize(32);
+    
+    // Reset the konami code
+    kCode = "";
+    
 }
 
 // Render function
@@ -110,7 +124,7 @@ function draw() {
         
     }
     
-    else {
+    else if (state == "play") {
         
         // Draw the background
         image(bImg, 0, 0, 600, 600);
@@ -136,6 +150,17 @@ function draw() {
         
     }
     
+    else {
+        
+        // Draw the game over image
+        image(dieImg, 0, 0, 600, 600);
+        
+        // Draw the score
+        fill(0);
+        text("You scored: " + score, 15, 280);
+        
+    }
+    
 }
 
 // Function to update the snake
@@ -149,49 +174,14 @@ function updateSnake() {
         
     }
     
-    // Check the value
-    if (keyIsDown(LEFT_ARROW) && direction !== "right") {
-        
-        // Set the speed
-        speed = {"dx": -1, "dy": 0}
-        direction = "left";
-    }
-    if (keyIsDown(RIGHT_ARROW) && direction !== "left") {
-        
-        // Set the speed
-        speed = {"dx": 1, "dy": 0}
-        direction = "right";
-    }
-    if (keyIsDown(UP_ARROW) && direction !== "down") {
-        
-        // Set the speed
-        speed = {"dx": 0, "dy": -1}
-        direction = "up";
-    }
-    if (keyIsDown(DOWN_ARROW) && direction !== "up") {
-        
-        // Set the speed
-        speed = {"dx": 0, "dy": 1}
-        direction = "down";
-    }
-    
     // Move the last location by speed
     snake[0] = {"x": snake[0].x + speed.dx, "y": snake[0].y + speed.dy}
     
     // Check if the head has wrapped
-    if (snake[0].x < 0) {
-        snake[0].x = gridSize - 1;
-    }
+    if ((snake[0].x < 0 || snake[0].x >= gridSize) || (snake[0].y < 0 || snake[0].y >= gridSize)) {
         
-    if (snake[0].x >= gridSize) {
-        snake[0].x = 0;
-    }
-    if (snake[0].y < 0) {
-        snake[0].y = gridSize - 1;
-    }
-        
-    if (snake[0].y >= gridSize) {
-        snake[0].y = 0;
+        //DIE
+        state = "dead";
     }
     
 }
@@ -215,7 +205,32 @@ function eaten() {
         // Generate a new powerup
         powerup = getRandCoord();
         
+        // Keep generating until a location not on the snake is found
+        while (powerupCollision()) {
+        
+            // Generate a new powerup
+            powerup = getRandCoord();
+            
+        }
+        
     }
+    
+}
+
+// Function to return whether the new powerup is touching the body
+function powerupCollision() {
+    
+    // Look at each body piece
+    for (var i = 0; i < snake.length; i++) {
+        
+        // If there is a collision, return true
+        if (snake[i].x == powerup.x && snake[i].y == powerup.y) {
+            return true;
+        }
+        
+    }
+    
+    return false;
     
 }
 
@@ -229,7 +244,8 @@ function death() {
         if (snake[0].x == snake[i].x && snake[0].y == snake[i].y) {
             
             // DIE
-            setup();
+            console.log(snake);
+            state = "dead";
             
         }
         
@@ -268,46 +284,70 @@ function drawSnake() {
 // Check for key presses
 function keyPressed() {
     
-    // Check the value
-    if (keyCode == LEFT_ARROW && direction !== "right") {
-        
-        // Set the speed
-        speed = {"dx": -1, "dy": 0}
-        direction = "left";
-    }
-    if (keyCode == RIGHT_ARROW && direction !== "left") {
-        
-        // Set the speed
-        speed = {"dx": 1, "dy": 0}
-        direction = "right";
-    }
-    if (keyCode == UP_ARROW && direction !== "down") {
-        
-        // Set the speed
-        speed = {"dx": 0, "dy": -1}
-        direction = "up";
-    }
-    if (keyCode == DOWN_ARROW && direction !== "up") {
-        
-        // Set the speed
-        speed = {"dx": 0, "dy": 1}
-        direction = "down";
-    }
-    
     // Check the key
     if (keyCode == SPACE) {
         
         if (state == "main") {
             
+            frameRate(fps);
             state = "play";
             
         }
         
         else if (state != "play") {
             
-            // Play the game
+            // Reset the game
             setup();
             
+        }
+        
+    }
+    
+    // If we are in the main menu and this isn't space key
+    if (state == "main") {
+        
+        // Add this to the kCode
+        kCode += keyCode.toString();
+        
+        // Check if the kCode user string contains the konami code
+        if (kCode.includes("38384040373937396566")) {
+            
+            // Change the menu image
+            menuImg = loadImage(baseURL + "res/kCode.png");
+            
+            // Set the frame rate
+            fps = 15;
+            
+        }
+        
+    }
+    
+    else {
+    
+        // Check the value
+        if (keyCode == LEFT_ARROW && direction !== "right") {
+
+            // Set the speed
+            speed = {"dx": -1, "dy": 0}
+            direction = "left";
+        }
+        if (keyCode == RIGHT_ARROW && direction !== "left") {
+
+            // Set the speed
+            speed = {"dx": 1, "dy": 0}
+            direction = "right";
+        }
+        if (keyCode == UP_ARROW && direction !== "down") {
+
+            // Set the speed
+            speed = {"dx": 0, "dy": -1}
+            direction = "up";
+        }
+        if (keyCode == DOWN_ARROW && direction !== "up") {
+
+            // Set the speed
+            speed = {"dx": 0, "dy": 1}
+            direction = "down";
         }
         
     }

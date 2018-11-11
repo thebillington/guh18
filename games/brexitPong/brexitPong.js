@@ -109,17 +109,8 @@ function draw() {
     // Otherwise complete game logic
     else if (state == "play") {
         
-        // Draw the background
-        image(parliament, 0, 0, 600, 600);
-        
-        // Draw the
-        rect(ukImg.x - borderWidth, ukImg.y - borderWidth, ukImg.w + borderWidth * 2, ukImg.h + borderWidth * 2);
-        rect(euImg.x - borderWidth, euImg.y - borderWidth, euImg.w + borderWidth * 2, euImg.h + borderWidth * 2);
-        
-        // Draw the entities
-        image(ukImg, ukImg.x, ukImg.y, ukImg.w, ukImg.h);
-        image(euImg, euImg.x, euImg.y, euImg.w, euImg.h);
-        image(deal, deal.x, deal.y, deal.w, deal.h);
+        // Draw all of the entities
+        drawEntities();
         
         // Check key presses
         if (keyIsDown(UP_ARROW)) {
@@ -173,7 +164,13 @@ function draw() {
             
             // Switch the x direction
             xSpeed *= -1;
-            deal.x += xSpeed;
+            
+            // Move the ball out of the paddle
+            while (rectCollision(ukImg, deal) || rectCollision(euImg, deal)) {
+                deal.x += xSpeed;
+                deal.y += ySpeed;
+                drawEntities();
+            }
             
         }
         
@@ -197,6 +194,23 @@ function draw() {
         
     }
     
+    
+}
+
+// Create a function to draw all the game elements
+function drawEntities() {
+        
+    // Draw the background
+    image(parliament, 0, 0, 600, 600);
+
+    // Draw the
+    rect(ukImg.x - borderWidth, ukImg.y - borderWidth, ukImg.w + borderWidth * 2, ukImg.h + borderWidth * 2);
+    rect(euImg.x - borderWidth, euImg.y - borderWidth, euImg.w + borderWidth * 2, euImg.h + borderWidth * 2);
+
+    // Draw the entities
+    image(ukImg, ukImg.x, ukImg.y, ukImg.w, ukImg.h);
+    image(euImg, euImg.x, euImg.y, euImg.w, euImg.h);
+    image(deal, deal.x, deal.y, deal.w, deal.h);
     
 }
 
@@ -225,8 +239,6 @@ function keyPressed() {
 
 // Function to check for a standard block collision
 function rectCollision(rectOne, rectTwo) {
-    
-    console.log("HERE");
     
     // Check whether there is a collision on the x and y
     return Math.abs((rectOne.x + rectOne.w / 2) - (rectTwo.x + rectTwo.w / 2)) < rectOne.w / 2 + rectTwo.w / 2 && Math.abs((rectOne.y + rectOne.h / 2) - (rectTwo.y + rectTwo.h / 2)) < rectOne.h / 2 + rectTwo.h / 2;
