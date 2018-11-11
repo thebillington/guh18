@@ -27,6 +27,12 @@ function search() {
     // Get the search term
     var term = document.getElementById("searchTerm").value;
     
+    // Get the error box
+    var error = document.getElementById("error");
+    
+    // Remove error text
+    error.innerHTML = "";
+    
     // Set the number of shown games to 0
     shown = 0;
     
@@ -35,7 +41,7 @@ function search() {
         
         // Set all the games to display
         for (var i = 0; i < games.length; i++) {
-            games[i].style.display = "none";
+            games[i].style.display = "inline-block";
         }
         return;
         
@@ -64,5 +70,13 @@ function search() {
             }
             
         }
-    }   
+    }  
+    
+    // Check if nothing was shown
+    if (shown == 0) {
+        
+        // Output an error
+        error.innerHTML = "<p>No results were found for your search...</p>";
+        
+    }
 }
