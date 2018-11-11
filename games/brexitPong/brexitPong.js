@@ -89,6 +89,9 @@ function setupEntities() {
     // Set the speeds
     xSpeed = 3;
     ySpeed = getRandomInt(-3, 3);
+    while (ySpeed == 0) {
+        ySpeed = getRandomInt(-3, 3);
+    }
     
 }
 
