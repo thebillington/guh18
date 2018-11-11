@@ -198,7 +198,7 @@ function draw() {
             // Keep Elon on screen
             if (pImg.x + pImg.w > width + 10) {
                 
-                pImg.x = width + 10 - pImg.w;
+                pImg.x = width - pImg.w;
                 
             }
         }
@@ -208,7 +208,7 @@ function draw() {
             // Keep Elon on screen
             if (pImg.x < - 10) {
                 
-                pImg.x = -10;
+                pImg.x = 0;
                 
             }
         }
